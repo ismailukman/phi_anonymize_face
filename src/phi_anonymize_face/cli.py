@@ -22,13 +22,25 @@ from .anonymizer import FaceAnonymizer
     show_default=True,
     help="Anonymization method.",
 )
-@click.option("--blur-strength", default=99, show_default=True, help="Blur kernel / pixelate block size.")
-@click.option("--padding", default=1.3, show_default=True, help="Bounding-box padding factor.")
-@click.option("--detector", default="mediapipe", show_default=True, help="Detector: mediapipe, opencv_dnn, retinaface, auto.")
-@click.option("--confidence", default=0.5, show_default=True, help="Min detection confidence.")
-@click.option("--no-fallback", is_flag=True, help="Disable detector cascade fallback.")
-@click.option("--recursive", is_flag=True, help="Recurse into subdirectories (folder mode).")
-@click.option("--keep-exif", is_flag=True, help="Preserve EXIF metadata (not recommended for PHI).")
+@click.option(
+    "--blur-strength", default=99, show_default=True,
+    help="Blur kernel / pixelate block size.",
+)
+@click.option(
+    "--padding", default=1.3, show_default=True,
+    help="Bounding-box padding factor.",
+)
+@click.option(
+    "--detector", default="mediapipe", show_default=True,
+    help="Detector: mediapipe, opencv_dnn, retinaface, auto.",
+)
+@click.option(
+    "--confidence", default=0.5, show_default=True,
+    help="Min detection confidence.",
+)
+@click.option("--no-fallback", is_flag=True, help="Disable cascade fallback.")
+@click.option("--recursive", is_flag=True, help="Recurse into subdirectories.")
+@click.option("--keep-exif", is_flag=True, help="Preserve EXIF metadata.")
 @click.option("--audit-log", default=None, help="Path for CSV audit log.")
 @click.option("--verify", is_flag=True, help="Verify output images have no residual faces.")
 def main(

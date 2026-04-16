@@ -8,33 +8,28 @@ from typing import Optional
 
 import cv2
 import numpy as np
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QImage, QPixmap, QIcon, QDragEnterEvent, QDropEvent
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QImage, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFileDialog,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QMainWindow,
     QMessageBox,
     QProgressBar,
     QPushButton,
-    QScrollArea,
     QSizePolicy,
     QSlider,
-    QSpinBox,
-    QStatusBar,
     QVBoxLayout,
     QWidget,
 )
 
 from ..anonymizer import FaceAnonymizer
 from ..result import AnonymizationResult
-from ..utils import SUPPORTED_EXTENSIONS
 from .styles import STYLESHEET
 from .worker import AnonymizeWorker
 

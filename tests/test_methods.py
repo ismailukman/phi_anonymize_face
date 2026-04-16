@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from phi_anonymize_face.methods import blur, pixelate, blackbox
+from phi_anonymize_face.methods import blackbox, blur, pixelate
 from phi_anonymize_face.result import BoundingBox
 
 

@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from phi_anonymize_face import FaceAnonymizer, anonymize_image, anonymize_folder
+from phi_anonymize_face import FaceAnonymizer, anonymize_folder, anonymize_image
 
 
 class TestFaceAnonymizer:

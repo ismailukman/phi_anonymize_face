@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 import cv2
 import numpy as np
@@ -102,7 +102,7 @@ def _save_dicom(image: np.ndarray, output_path: Path) -> str:
     """Save image as a basic DICOM file."""
     try:
         import pydicom
-        from pydicom.dataset import Dataset, FileDataset
+        from pydicom.dataset import FileDataset
         from pydicom.uid import ExplicitVRLittleEndian, generate_uid
     except ImportError:
         raise ImportError(
