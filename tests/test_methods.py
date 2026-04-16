@@ -7,7 +7,9 @@ from phi_anonymize_face.result import BoundingBox
 
 
 def _make_image():
-    return np.full((100, 100, 3), 128, dtype=np.uint8)
+    """Create a test image with variation (gradient) so blur/pixelate are visible."""
+    rng = np.random.RandomState(42)
+    return rng.randint(0, 256, (100, 100, 3), dtype=np.uint8)
 
 
 def test_blur_modifies_region():
@@ -15,7 +17,7 @@ def test_blur_modifies_region():
     original = img.copy()
     box = BoundingBox(10, 10, 30, 30)
     blur(img, box, strength=15)
-    # Region should be modified
+    # Region should be modified (random pixels get smoothed)
     assert not np.array_equal(img[10:40, 10:40], original[10:40, 10:40])
     # Outside region should be unchanged
     assert np.array_equal(img[0:5, 0:5], original[0:5, 0:5])
@@ -23,8 +25,6 @@ def test_blur_modifies_region():
 
 def test_pixelate_modifies_region():
     img = _make_image()
-    # Add some detail so pixelation is visible
-    img[15:25, 15:25] = 255
     original = img.copy()
     box = BoundingBox(10, 10, 30, 30)
     pixelate(img, box, strength=5)
