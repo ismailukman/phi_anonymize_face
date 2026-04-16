@@ -1,0 +1,87 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "phi-anonymize-face"
+version = "0.1.0"
+description = "HIPAA-compliant face de-identification for medical images"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [
+    { name = "Lukman Ismaila", email = "ismailukman@users.noreply.github.com" },
+]
+keywords = [
+    "face-detection",
+    "anonymization",
+    "medical-imaging",
+    "hipaa",
+    "phi",
+    "de-identification",
+    "dicom",
+    "privacy",
+    "opencv",
+    "computer-vision",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+dependencies = [
+    "opencv-python>=4.8",
+    "mediapipe>=0.10",
+    "numpy",
+    "Pillow",
+    "tqdm",
+    "click",
+]
+
+[project.optional-dependencies]
+dicom = ["pydicom>=2.4"]
+retinaface = ["insightface>=0.7", "onnxruntime>=1.16"]
+all = ["pydicom>=2.4", "insightface>=0.7", "onnxruntime>=1.16"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+]
+
+[project.scripts]
+phi-anonymize = "phi_anonymize_face.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ismailukman/phi_anonymize_face"
+Repository = "https://github.com/ismailukman/phi_anonymize_face"
+Issues = "https://github.com/ismailukman/phi_anonymize_face/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/phi_anonymize_face"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 99
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
