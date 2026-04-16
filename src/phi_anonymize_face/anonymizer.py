@@ -104,11 +104,11 @@ class FaceAnonymizer:
             from .segmentation import create_face_mask
 
             for box in boxes:
-                # Light padding for mask generation
+                # Use light padding for the bounding box (just enough
+                # to contain the mask), but the mask itself traces the
+                # precise face contour with minimal expansion.
                 padded_box = box.pad(self.padding, w, h)
-                mask = create_face_mask(
-                    image, box, padding=self.padding
-                )
+                mask = create_face_mask(image, box, padding=1.0)
                 out = self._apply(
                     out, padded_box,
                     strength=self.blur_strength, mask=mask,

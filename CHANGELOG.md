@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0 (2026-04-16)
+
+- Add precise face-contour masking mode (`mask_mode="face"`).
+- MediaPipe Face Mesh (468 landmarks) for accurate face-only blur.
+- Tighter inner-face contour — no spill onto hair, ears, or background.
+- Fallback to elliptical mask when Face Mesh is unavailable.
+- Add `--mask-mode` CLI option and GUI dropdown.
+- Add PyQt6 desktop GUI with side-by-side preview and batch processing.
+- GUI screenshot added to README.
+- Fix tests for uniform-image edge case.
+
 ## 0.1.0 (2026-04-16)
 
 - Initial release.
