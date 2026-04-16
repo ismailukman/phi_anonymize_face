@@ -128,9 +128,17 @@ class MainWindow(QMainWindow):
         layout.setSpacing(8)
 
         # Title
-        title = QLabel("PHI Face\nAnonymizer")
+        title = QLabel("PHI Face Anonymizer")
         title.setObjectName("appTitle")
+        title.setWordWrap(True)
         layout.addWidget(title)
+
+        subtitle = QLabel("HIPAA-compliant face de-identification")
+        subtitle.setStyleSheet(
+            "color: #6c7086; font-size: 11px; padding-bottom: 4px;"
+        )
+        subtitle.setWordWrap(True)
+        layout.addWidget(subtitle)
 
         # ---- Input section ----
         layout.addWidget(self._section_label("Input"))
@@ -157,6 +165,15 @@ class MainWindow(QMainWindow):
         self._combo_method.addItems(["blur", "pixelate", "blackbox"])
         self._combo_method.setToolTip("How to obscure detected faces")
         layout.addWidget(self._combo_method)
+
+        layout.addWidget(QLabel("Mask Mode"))
+        self._combo_mask = QComboBox()
+        self._combo_mask.addItems(["box", "face"])
+        self._combo_mask.setToolTip(
+            "box = rectangular region (fast)\n"
+            "face = precise face contour (accurate, no background)"
+        )
+        layout.addWidget(self._combo_mask)
 
         layout.addWidget(QLabel("Blur Strength"))
         self._slider_blur = QSlider(Qt.Orientation.Horizontal)
@@ -381,6 +398,7 @@ class MainWindow(QMainWindow):
             method=self._combo_method.currentText(),
             blur_strength=blur_val,
             padding=self._spin_padding.value(),
+            mask_mode=self._combo_mask.currentText(),
             detector=self._combo_detector.currentText(),
             confidence_threshold=self._spin_conf.value(),
             fallback=self._chk_fallback.isChecked(),

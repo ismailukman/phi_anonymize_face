@@ -18,6 +18,8 @@ from .utils import collect_image_paths, resize_for_detection, scale_boxes
 
 logger = logging.getLogger("phi_anonymize_face")
 
+MASK_MODES = ("box", "face")
+
 
 class FaceAnonymizer:
     """Detect and de-identify faces in images.
@@ -25,11 +27,13 @@ class FaceAnonymizer:
     Args:
         method: Anonymization method ("blur", "pixelate", "blackbox").
         blur_strength: Kernel size for blur / block size for pixelate.
-        padding: Bounding-box expansion factor (1.3 = 30 % larger).
-        detector: Detector backend ("mediapipe", "opencv_dnn", "retinaface", "auto").
+        padding: Bounding-box expansion factor (1.3 = 30% larger).
+        mask_mode: "box" (rectangular region) or "face" (precise
+            face-shaped mask using MediaPipe Face Mesh).
+        detector: Detector backend.
         confidence_threshold: Minimum detection confidence.
-        fallback: If True and detector finds 0 faces, try next in cascade.
-        strip_exif: Strip EXIF metadata from output (default True for PHI safety).
+        fallback: Cascade to next detector if current finds 0 faces.
+        strip_exif: Strip EXIF metadata from output.
         audit_log: Optional path for CSV audit trail.
     """
 
@@ -38,6 +42,7 @@ class FaceAnonymizer:
         method: str = "blur",
         blur_strength: int = 99,
         padding: float = 1.3,
+        mask_mode: str = "box",
         detector: str = "mediapipe",
         confidence_threshold: float = 0.5,
         fallback: bool = True,
@@ -45,10 +50,18 @@ class FaceAnonymizer:
         audit_log: Optional[str] = None,
     ) -> None:
         if method not in METHODS:
-            raise ValueError(f"Unknown method '{method}'. Choose from: {list(METHODS)}")
+            raise ValueError(
+                f"Unknown method '{method}'. Choose from: {list(METHODS)}"
+            )
+        if mask_mode not in MASK_MODES:
+            raise ValueError(
+                f"Unknown mask_mode '{mask_mode}'. "
+                f"Choose from: {MASK_MODES}"
+            )
         self.method = method
         self.blur_strength = blur_strength
         self.padding = padding
+        self.mask_mode = mask_mode
         self.detector_name = detector
         self.confidence_threshold = confidence_threshold
         self.fallback = fallback
@@ -56,7 +69,7 @@ class FaceAnonymizer:
         self._audit = AuditLogger(audit_log)
         self._apply = METHODS[method]
 
-    # ---- public API --------------------------------------------------------
+    # ---- public API -------------------------------------------------------
 
     def process(
         self,
@@ -72,7 +85,9 @@ class FaceAnonymizer:
         Returns:
             AnonymizationResult with the processed image and metadata.
         """
-        src_str = str(source) if not isinstance(source, np.ndarray) else None
+        src_str = (
+            str(source) if not isinstance(source, np.ndarray) else None
+        )
         try:
             image = load_image(source)
         except Exception as exc:
@@ -82,20 +97,42 @@ class FaceAnonymizer:
 
         boxes = self._detect(image)
         h, w = image.shape[:2]
-        padded = [b.pad(self.padding, w, h) for b in boxes]
 
         out = image.copy()
-        for box in padded:
-            out = self._apply(out, box, strength=self.blur_strength)
+
+        if self.mask_mode == "face":
+            from .segmentation import create_face_mask
+
+            for box in boxes:
+                # Light padding for mask generation
+                padded_box = box.pad(self.padding, w, h)
+                mask = create_face_mask(
+                    image, box, padding=self.padding
+                )
+                out = self._apply(
+                    out, padded_box,
+                    strength=self.blur_strength, mask=mask,
+                )
+        else:
+            padded = [b.pad(self.padding, w, h) for b in boxes]
+            for box in padded:
+                out = self._apply(
+                    out, box, strength=self.blur_strength
+                )
+
+        # For result, always report padded boxes
+        padded_for_result = [b.pad(self.padding, w, h) for b in boxes]
 
         saved = None
         if output_path:
-            saved = save_image(out, output_path, strip_exif=self.strip_exif)
+            saved = save_image(
+                out, output_path, strip_exif=self.strip_exif
+            )
 
         result = AnonymizationResult(
             image=out,
             faces_detected=len(boxes),
-            bounding_boxes=padded,
+            bounding_boxes=padded_for_result,
             output_path=saved,
             success=True,
             source_path=src_str,
@@ -154,10 +191,7 @@ class FaceAnonymizer:
         return results
 
     def verify(self, source: Union[str, Path, np.ndarray]) -> bool:
-        """Check that an image contains no detectable faces.
-
-        Useful as a post-anonymization validation step.
-        """
+        """Check that an image contains no detectable faces."""
         try:
             image = load_image(source)
         except Exception:
@@ -165,7 +199,7 @@ class FaceAnonymizer:
         boxes = self._detect(image)
         return len(boxes) == 0
 
-    # ---- internal ----------------------------------------------------------
+    # ---- internal ---------------------------------------------------------
 
     def _detect(self, image: np.ndarray) -> list:
         """Run detection, optionally cascading through detectors."""
@@ -176,7 +210,10 @@ class FaceAnonymizer:
         else:
             order = [self.detector_name]
             if self.fallback:
-                order += [d for d in CASCADE_ORDER if d != self.detector_name]
+                order += [
+                    d for d in CASCADE_ORDER
+                    if d != self.detector_name
+                ]
 
         for name in order:
             det = get_detector(name)

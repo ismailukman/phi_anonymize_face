@@ -38,6 +38,13 @@ from .anonymizer import FaceAnonymizer
     "--confidence", default=0.5, show_default=True,
     help="Min detection confidence.",
 )
+@click.option(
+    "--mask-mode",
+    type=click.Choice(["box", "face"]),
+    default="box",
+    show_default=True,
+    help="box=rectangular region, face=precise face contour.",
+)
 @click.option("--no-fallback", is_flag=True, help="Disable cascade fallback.")
 @click.option("--recursive", is_flag=True, help="Recurse into subdirectories.")
 @click.option("--keep-exif", is_flag=True, help="Preserve EXIF metadata.")
@@ -51,6 +58,7 @@ def main(
     padding: float,
     detector: str,
     confidence: float,
+    mask_mode: str,
     no_fallback: bool,
     recursive: bool,
     keep_exif: bool,
@@ -62,6 +70,7 @@ def main(
         method=method,
         blur_strength=blur_strength,
         padding=padding,
+        mask_mode=mask_mode,
         detector=detector,
         confidence_threshold=confidence,
         fallback=not no_fallback,
