@@ -1,9 +1,8 @@
 # phi_anonymize_face
 
-[![PyPI](https://img.shields.io/pypi/v/phi-anonymize-face)](https://pypi.org/project/phi-anonymize-face/)
-[![Python](https://img.shields.io/pypi/pyversions/phi-anonymize-face)](https://pypi.org/project/phi-anonymize-face/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/ismailukman/phi_anonymize_face/actions/workflows/ci.yml/badge.svg)](https://github.com/ismailukman/phi_anonymize_face/actions)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
+[![CI](https://github.com/ismailukman/phi_anonymize_face/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ismailukman/phi_anonymize_face/actions)
 
 **HIPAA-compliant face de-identification for medical images.**
 
