@@ -151,21 +151,63 @@ Install with `pip install phi-anonymize-face[dicom]`.
 
 ## API Reference
 
-### `FaceAnonymizer(method, blur_strength, padding, detector, confidence_threshold, fallback, strip_exif, audit_log)`
+### `FaceAnonymizer`
 
-Main class. All parameters are optional with sensible defaults.
+The main class for configuring and running face anonymization.
 
-### `anonymize_image(source, method, output_path, **kwargs) → AnonymizationResult`
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `method` | `str` | `"blur"` | Anonymization method: `"blur"`, `"pixelate"`, `"blackbox"` |
+| `blur_strength` | `int` | `99` | Kernel size for blur / block size for pixelate |
+| `padding` | `float` | `1.3` | Bounding-box expansion factor (1.3 = 30% larger) |
+| `detector` | `str` | `"mediapipe"` | Backend: `"mediapipe"`, `"opencv_dnn"`, `"retinaface"`, `"auto"` |
+| `confidence_threshold` | `float` | `0.5` | Minimum detection confidence to keep a face |
+| `fallback` | `bool` | `True` | Cascade to next detector if current finds 0 faces |
+| `strip_exif` | `bool` | `True` | Remove EXIF metadata from output (recommended for PHI) |
+| `audit_log` | `str\|None` | `None` | Path for CSV audit trail file |
 
-Quick function for single images.
+**Methods:**
 
-### `anonymize_folder(folder, output_dir, method, recursive, **kwargs) → list[AnonymizationResult]`
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `process()` | `process(source, output_path=None) → AnonymizationResult` | Anonymize a single image (path, Path, or numpy array) |
+| `process_folder()` | `process_folder(folder, output_dir, recursive=False) → list[AnonymizationResult]` | Batch-process all images in a folder |
+| `verify()` | `verify(source) → bool` | Returns `True` if no faces are detected (post-anonymization check) |
 
-Quick function for batch processing.
+---
+
+### `anonymize_image`
+
+```python
+anonymize_image(source, method="blur", output_path=None, **kwargs) → AnonymizationResult
+```
+
+Quick function for single images. All `**kwargs` are forwarded to `FaceAnonymizer`.
+
+---
+
+### `anonymize_folder`
+
+```python
+anonymize_folder(folder, output_dir, method="blur", recursive=False, **kwargs) → list[AnonymizationResult]
+```
+
+Quick function for batch processing. All `**kwargs` are forwarded to `FaceAnonymizer`.
+
+---
 
 ### `AnonymizationResult`
 
-Dataclass with: `image` (ndarray), `faces_detected` (int), `bounding_boxes` (list), `output_path` (str|None), `success` (bool), `error` (str|None).
+Dataclass returned by all processing methods.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `image` | `np.ndarray\|None` | The anonymized image (BGR numpy array) |
+| `faces_detected` | `int` | Number of faces found |
+| `bounding_boxes` | `list[BoundingBox]` | Padded bounding boxes of detected faces |
+| `output_path` | `str\|None` | Path where the image was saved (if requested) |
+| `success` | `bool` | Whether processing completed without error |
+| `error` | `str\|None` | Error message if `success` is `False` |
 
 ---
 
