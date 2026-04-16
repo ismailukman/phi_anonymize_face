@@ -8,6 +8,8 @@
 
 Automatically detect and anonymize faces in clinical photographs, DICOM images, and standard image formats. Built for healthcare, research, and any workflow that requires Protected Health Information (PHI) removal from facial imagery.
 
+Use it three ways: **Python API**, **CLI**, or **GUI desktop app**.
+
 ---
 
 ## Features
@@ -15,10 +17,11 @@ Automatically detect and anonymize faces in clinical photographs, DICOM images, 
 - **Multi-detector cascade** — MediaPipe (fast) → OpenCV DNN/Haar (robust) → RetinaFace (high-recall). Falls back automatically if a detector finds no faces.
 - **3 anonymization methods** — Gaussian blur, pixelation, or black-box redaction.
 - **Medical-grade padding** — Configurable bounding-box expansion (default 1.3x) ensures ears, hairline, and chin are fully covered.
+- **Desktop GUI** — PyQt6 app with side-by-side preview, tunable parameters, drag-and-drop, and batch processing.
+- **CLI tool** — `phi-anonymize` command for scripting and pipelines.
 - **DICOM support** — Read/write DICOM pixel data (optional `pydicom` extra).
 - **EXIF stripping** — Removes metadata by default (EXIF can contain PHI).
-- **Batch processing** — Parallel folder processing with progress bar.
-- **CLI tool** — `phi-anonymize` command for scripting and pipelines.
+- **Batch processing** — Parallel folder processing with progress bar (CLI, GUI, and API).
 - **Audit logging** — CSV trail of every processed image for compliance.
 - **Verification mode** — Re-run detection on output to confirm no residual faces.
 - **Accepts images or numpy arrays** — Integrate into any Python pipeline.
@@ -27,30 +30,164 @@ Automatically detect and anonymize faces in clinical photographs, DICOM images, 
 
 ## Installation
 
+**Core library (API + CLI):**
 ```bash
 pip install phi-anonymize-face
 ```
 
-With DICOM support:
+**With GUI:**
+```bash
+pip install phi-anonymize-face[gui]
+```
+
+**With DICOM support:**
 ```bash
 pip install phi-anonymize-face[dicom]
 ```
 
-With RetinaFace (highest recall):
+**With RetinaFace (highest recall):**
 ```bash
 pip install phi-anonymize-face[retinaface]
 ```
 
-Everything:
+**Everything:**
 ```bash
 pip install phi-anonymize-face[all]
 ```
 
 ---
 
-## Quick Start
+## GUI Application
 
-### Python API
+Launch the desktop app:
+
+```bash
+phi-anonymize-gui
+```
+
+Or from Python:
+
+```python
+from phi_anonymize_face.gui.app import main
+main()
+```
+
+### GUI Features
+
+| Feature | Description |
+|---------|-------------|
+| **Side-by-side preview** | Original and anonymized images shown together |
+| **Drag-and-drop** | Drop an image directly onto the preview area |
+| **Tunable controls** | Method, blur strength slider, detector, confidence, padding |
+| **Single image mode** | Load Image → adjust settings → Anonymize → Save |
+| **Batch folder mode** | Load Folder → select output folder → processes all with progress bar |
+| **Stats cards** | Live display of faces detected, processing status, image dimensions |
+| **EXIF toggle** | Strip or preserve EXIF metadata |
+| **Fallback toggle** | Enable/disable detector cascade |
+| **Dark theme** | Modern dark UI (Catppuccin Mocha) |
+
+### GUI Workflow
+
+**Single image:**
+1. Click **Load Image** (or drag-and-drop onto the preview area)
+2. Adjust settings in the sidebar (method, blur strength, detector, etc.)
+3. Click **Anonymize**
+4. Review the side-by-side before/after preview
+5. Click **Save Result** to export
+
+**Batch folder:**
+1. Click **Load Folder** — all supported images are discovered (including subdirectories)
+2. Adjust settings in the sidebar
+3. Click **Anonymize** → select an output folder
+4. Watch progress bar and live preview as each image is processed
+5. Summary dialog shows total faces anonymized
+
+---
+
+## CLI Tool
+
+The `phi-anonymize` command is available after installation.
+
+### Single Image
+
+```bash
+# Default blur
+phi-anonymize -i patient.jpg -o anonymized.jpg
+
+# Choose method
+phi-anonymize -i photo.jpg -o out.jpg --method pixelate
+phi-anonymize -i photo.jpg -o out.jpg --method blackbox
+
+# Adjust blur strength and padding
+phi-anonymize -i photo.jpg -o out.jpg --blur-strength 151 --padding 1.5
+```
+
+### Folder Batch
+
+```bash
+# Process all images in a folder
+phi-anonymize -i ./patient_photos/ -o ./anonymized/
+
+# Recursive (includes subdirectories)
+phi-anonymize -i ./patient_photos/ -o ./anonymized/ --recursive
+```
+
+### Detection Options
+
+```bash
+# Use a specific detector
+phi-anonymize -i photo.jpg -o out.jpg --detector opencv_dnn
+
+# Auto cascade (try all detectors)
+phi-anonymize -i photo.jpg -o out.jpg --detector auto
+
+# Lower confidence to catch more faces
+phi-anonymize -i photo.jpg -o out.jpg --confidence 0.3
+
+# Disable fallback (use only selected detector)
+phi-anonymize -i photo.jpg -o out.jpg --no-fallback
+```
+
+### Compliance Options
+
+```bash
+# Enable audit trail (CSV log of every processed image)
+phi-anonymize -i ./photos/ -o ./safe/ --audit-log audit.csv
+
+# Verify output (re-run detection on anonymized images — should find 0 faces)
+phi-anonymize -i photo.jpg -o safe.jpg --verify
+
+# Keep EXIF metadata (not recommended for PHI)
+phi-anonymize -i photo.jpg -o out.jpg --keep-exif
+```
+
+### Full CLI Reference
+
+```
+Usage: phi-anonymize [OPTIONS]
+
+Options:
+  -i, --input TEXT        Image or folder path (required)
+  -o, --output TEXT       Output path (required)
+  -m, --method TEXT       blur | pixelate | blackbox (default: blur)
+  --blur-strength INT     Blur kernel size (default: 99)
+  --padding FLOAT         Bounding-box padding factor (default: 1.3)
+  --detector TEXT         mediapipe | opencv_dnn | retinaface | auto (default: mediapipe)
+  --confidence FLOAT      Min detection confidence (default: 0.5)
+  --no-fallback           Disable detector cascade fallback
+  --recursive             Recurse into subdirectories (folder mode)
+  --keep-exif             Preserve EXIF metadata
+  --audit-log TEXT        Path for CSV audit log
+  --verify                Verify output images have no residual faces
+  --version               Show version
+  -h, --help              Show help
+```
+
+---
+
+## Python API
+
+### Quick Start
 
 ```python
 from phi_anonymize_face import anonymize_image, anonymize_folder, FaceAnonymizer
@@ -76,20 +213,29 @@ result = anon.process("patient.jpg", output_path="anonymized.jpg")
 results = anon.process_folder("photos/", output_dir="safe_photos/")
 ```
 
-### CLI
+### Working with Results
 
-```bash
-# Single image
-phi-anonymize -i patient.jpg -o anon.jpg --method blur --blur-strength 99
+```python
+result = anonymize_image("photo.jpg", output_path="anon.jpg")
 
-# Folder (recursive)
-phi-anonymize -i ./patient_photos/ -o ./anonymized/ --method pixelate --recursive
+if result.success:
+    print(f"Faces: {result.faces_detected}")
+    for box in result.bounding_boxes:
+        print(f"  x={box.x}, y={box.y}, w={box.w}, h={box.h}, conf={box.confidence:.2f}")
+    # result.image is the anonymized numpy array (BGR)
+else:
+    print(f"Error: {result.error}")
+```
 
-# With verification (re-checks output for residual faces)
-phi-anonymize -i photo.jpg -o safe.jpg --verify
+### Using with Numpy Arrays
 
-# With audit trail
-phi-anonymize -i ./photos/ -o ./out/ --audit-log audit.csv
+```python
+import cv2
+from phi_anonymize_face import anonymize_image
+
+img = cv2.imread("photo.jpg")
+result = anonymize_image(img, method="pixelate")
+cv2.imwrite("anon.jpg", result.image)
 ```
 
 ---
@@ -210,12 +356,84 @@ Dataclass returned by all processing methods.
 
 ---
 
+## Step-by-Step Usage Guide
+
+### Option 1: GUI (Desktop App) — No coding required
+
+1. **Install:** `pip install phi-anonymize-face[gui]`
+2. **Launch:** Run `phi-anonymize-gui` in your terminal
+3. **Load an image:** Click **Load Image** in the sidebar, or drag-and-drop onto the preview area
+4. **Adjust settings:** Use the sidebar controls to pick a method (blur/pixelate/blackbox), set blur strength, choose a detector, and adjust confidence and padding
+5. **Anonymize:** Click the blue **Anonymize** button
+6. **Review:** Compare the original and anonymized images side-by-side
+7. **Save:** Click **Save Result** and choose where to export
+
+**For a folder of images:**
+1. Click **Load Folder** instead of Load Image
+2. Adjust settings as needed
+3. Click **Anonymize** → select an output folder when prompted
+4. Watch the progress bar — each image previews as it completes
+5. A summary dialog appears when done
+
+---
+
+### Option 2: CLI (Command Line) — For scripting and automation
+
+1. **Install:** `pip install phi-anonymize-face`
+2. **Single image:** `phi-anonymize -i photo.jpg -o anonymized.jpg`
+3. **Choose a method:** Add `--method pixelate` or `--method blackbox`
+4. **Adjust blur:** Add `--blur-strength 151` (higher = more blur)
+5. **Batch a folder:** `phi-anonymize -i ./photos/ -o ./safe/ --recursive`
+6. **Add audit log:** Append `--audit-log audit.csv`
+7. **Verify output:** Append `--verify` to confirm no residual faces
+
+---
+
+### Option 3: Python API — For integration into code/pipelines
+
+1. **Install:** `pip install phi-anonymize-face`
+2. **Quick anonymize:**
+   ```python
+   from phi_anonymize_face import anonymize_image
+   result = anonymize_image("photo.jpg", output_path="anon.jpg")
+   print(f"Faces blurred: {result.faces_detected}")
+   ```
+3. **Choose method:**
+   ```python
+   anonymize_image("photo.jpg", method="pixelate", output_path="pix.jpg")
+   ```
+4. **Batch a folder:**
+   ```python
+   from phi_anonymize_face import anonymize_folder
+   results = anonymize_folder("./photos/", output_dir="./safe/")
+   ```
+5. **Fine-tune settings:**
+   ```python
+   from phi_anonymize_face import FaceAnonymizer
+   anon = FaceAnonymizer(
+       method="blur", blur_strength=99, padding=1.3,
+       detector="mediapipe", confidence_threshold=0.5,
+       fallback=True, audit_log="audit.csv",
+   )
+   result = anon.process("photo.jpg", output_path="safe.jpg")
+   ```
+6. **Use with numpy arrays:**
+   ```python
+   import cv2
+   from phi_anonymize_face import anonymize_image
+   img = cv2.imread("photo.jpg")
+   result = anonymize_image(img, method="blur")
+   cv2.imwrite("anon.jpg", result.image)
+   ```
+
+---
+
 ## Development
 
 ```bash
 git clone https://github.com/ismailukman/phi_anonymize_face.git
 cd phi_anonymize_face
-pip install -e ".[dev]"
+pip install -e ".[dev,gui]"
 pytest
 ruff check src/ tests/
 ```
