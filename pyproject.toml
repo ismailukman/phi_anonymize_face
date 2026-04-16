@@ -50,7 +50,8 @@ dependencies = [
 [project.optional-dependencies]
 dicom = ["pydicom>=2.4"]
 retinaface = ["insightface>=0.7", "onnxruntime>=1.16"]
-all = ["pydicom>=2.4", "insightface>=0.7", "onnxruntime>=1.16"]
+gui = ["PyQt6>=6.5"]
+all = ["pydicom>=2.4", "insightface>=0.7", "onnxruntime>=1.16", "PyQt6>=6.5"]
 dev = [
     "pytest>=7.0",
     "pytest-cov",
@@ -60,6 +61,9 @@ dev = [
 
 [project.scripts]
 phi-anonymize = "phi_anonymize_face.cli:main"
+
+[project.gui-scripts]
+phi-anonymize-gui = "phi_anonymize_face.gui.app:main"
 
 [project.urls]
 Homepage = "https://github.com/ismailukman/phi_anonymize_face"
