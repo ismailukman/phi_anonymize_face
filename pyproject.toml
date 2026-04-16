@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "phi-anonymize-face"
-version = "0.2.0"
+version = "0.2.1"
 description = "HIPAA-compliant face de-identification for medical images"
 readme = "README.md"
 license = { text = "MIT" }

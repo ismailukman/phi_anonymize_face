@@ -10,7 +10,7 @@ import numpy as np
 from .anonymizer import FaceAnonymizer
 from .result import AnonymizationResult, BoundingBox
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 
 def anonymize_image(

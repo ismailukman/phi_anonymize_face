@@ -72,7 +72,7 @@ from phi_anonymize_face.gui.app import main
 main()
 ```
 
-![PHI Face Anonymizer GUI](docs/images/gui_screenshot.png)
+![PHI Face Anonymizer GUI](https://raw.githubusercontent.com/ismailukman/phi_anonymize_face/master/docs/images/gui_screenshot.png)
 
 ### GUI Features
 
