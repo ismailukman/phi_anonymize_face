@@ -30,36 +30,58 @@ Use it three ways: **Python API**, **CLI**, or **GUI desktop app**.
 
 ## Installation
 
-**Core library (API + CLI):**
+Pick the path that matches what you want. Most non-developers should start with **Option 1**.
+
+### Option 1 — Download a prebuilt app (no Python needed)
+
+Grab the archive for your OS from the [latest release](https://github.com/ismailukman/phi_anonymize_face/releases/latest):
+
+| Platform | File |
+|---|---|
+| Windows 10/11 (x64) | `phi-anonymize-face-windows-x64.zip` |
+| macOS (Apple Silicon — M1/M2/M3/M4) | `phi-anonymize-face-macos-arm64.zip` |
+| macOS (Intel) | `phi-anonymize-face-macos-x64.zip` |
+
+Unzip it. Inside you'll find:
+- **`phi-anonymize-gui`** (or `phi-anonymize-gui.app` on macOS) — double-click to launch the desktop app.
+- **`phi-anonymize`** — command-line tool (open a terminal in this folder and run `./phi-anonymize --help`).
+
+**Windows first run:** SmartScreen may warn. Click **More info → Run anyway**.
+
+**macOS first run:** the bundle is unsigned. Either right-click the `.app` → **Open** the first time, or run once after unzipping:
 ```bash
-pip install phi-anonymize-face
+xattr -dr com.apple.quarantine phi-anonymize-gui.app
 ```
 
-**With GUI:**
+### Option 2 — Install with pipx (isolated, one command)
+
+If you have Python but want a clean, isolated install with the GUI launchable from anywhere:
+
 ```bash
-pip install phi-anonymize-face[gui]
+pipx install "phi-anonymize-face[gui]"
+phi-anonymize-gui    # launches the GUI
+phi-anonymize --help # CLI
 ```
 
-**With DICOM support:**
-```bash
-pip install phi-anonymize-face[dicom]
-```
+(Don't have pipx? `python -m pip install --user pipx && python -m pipx ensurepath`.)
 
-**With RetinaFace (highest recall):**
-```bash
-pip install phi-anonymize-face[retinaface]
-```
+### Option 3 — pip install (for Python users / pipelines)
 
-**Everything:**
 ```bash
-pip install phi-anonymize-face[all]
+pip install phi-anonymize-face            # core library + CLI
+pip install "phi-anonymize-face[gui]"     # + desktop GUI
+pip install "phi-anonymize-face[dicom]"   # + DICOM support
+pip install "phi-anonymize-face[retinaface]"  # + high-recall detector
+pip install "phi-anonymize-face[all]"     # everything
 ```
 
 ---
 
 ## GUI Application
 
-Launch the desktop app:
+If you used Option 1, double-click `phi-anonymize-gui` (Windows) or `phi-anonymize-gui.app` (macOS).
+
+If you installed via pip/pipx, launch from a terminal:
 
 ```bash
 phi-anonymize-gui
@@ -176,6 +198,7 @@ Options:
   --padding FLOAT         Bounding-box padding factor (default: 1.3)
   --detector TEXT         mediapipe | opencv_dnn | retinaface | auto (default: mediapipe)
   --confidence FLOAT      Min detection confidence (default: 0.5)
+  --mask-mode TEXT        box | face — rectangular region or precise face contour (default: box)
   --no-fallback           Disable detector cascade fallback
   --recursive             Recurse into subdirectories (folder mode)
   --keep-exif             Preserve EXIF metadata
@@ -438,6 +461,28 @@ cd phi_anonymize_face
 pip install -e ".[dev,gui]"
 pytest
 ruff check src/ tests/
+```
+
+### Cutting a release
+
+Releases are cut by pushing a `v*` tag. The `release.yml` workflow builds standalone binaries on Windows + macOS arm64 + macOS x64, builds the wheel/sdist on Linux, and publishes a GitHub Release with all assets attached.
+
+```bash
+# 1. Bump version in pyproject.toml and src/phi_anonymize_face/__init__.py
+# 2. Update CHANGELOG.md
+# 3. Commit, tag, push:
+git commit -am "Release v0.2.2"
+git tag v0.2.2
+git push && git push --tags
+```
+
+To build binaries locally:
+
+```bash
+pip install pyinstaller
+pyinstaller packaging/phi-anonymize-gui.spec --noconfirm
+pyinstaller packaging/phi-anonymize.spec --noconfirm
+# Output in packaging/dist/
 ```
 
 ---

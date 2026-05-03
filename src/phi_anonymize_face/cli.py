@@ -31,8 +31,10 @@ from .anonymizer import FaceAnonymizer
     help="Bounding-box padding factor.",
 )
 @click.option(
-    "--detector", default="mediapipe", show_default=True,
-    help="Detector: mediapipe, opencv_dnn, retinaface, auto.",
+    "--detector",
+    type=click.Choice(["mediapipe", "opencv_dnn", "retinaface", "auto"]),
+    default="mediapipe", show_default=True,
+    help="Detector backend.",
 )
 @click.option(
     "--confidence", default=0.5, show_default=True,

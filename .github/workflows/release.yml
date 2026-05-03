@@ -1,0 +1,156 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.2.2). Required for manual runs."
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-binaries:
+    name: Bundle (${{ matrix.label }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            label: windows-x64
+            archive_ext: zip
+          - os: macos-latest
+            label: macos-arm64
+            archive_ext: zip
+          - os: macos-13
+            label: macos-x64
+            archive_ext: zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[gui]"
+          pip install pyinstaller
+
+      - name: Build GUI binary
+        working-directory: packaging
+        run: pyinstaller phi-anonymize-gui.spec --noconfirm --clean
+
+      - name: Build CLI binary
+        working-directory: packaging
+        run: pyinstaller phi-anonymize.spec --noconfirm --clean
+
+      - name: Stage artifacts (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p staging
+          cp -R packaging/dist/phi-anonymize-gui.app staging/ 2>/dev/null || cp -R packaging/dist/phi-anonymize-gui staging/
+          cp -R packaging/dist/phi-anonymize staging/
+          cp README.md LICENSE CHANGELOG.md staging/
+          cd staging
+          zip -ry "../phi-anonymize-face-${{ matrix.label }}.zip" .
+
+      - name: Stage artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path staging | Out-Null
+          Copy-Item -Recurse packaging/dist/phi-anonymize-gui staging/
+          Copy-Item -Recurse packaging/dist/phi-anonymize staging/
+          Copy-Item README.md, LICENSE, CHANGELOG.md staging/
+          Compress-Archive -Path staging/* -DestinationPath "phi-anonymize-face-${{ matrix.label }}.zip" -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phi-anonymize-face-${{ matrix.label }}
+          path: phi-anonymize-face-${{ matrix.label }}.zip
+          if-no-files-found: error
+
+  build-wheel:
+    name: Build wheel + sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          python -m pip install --upgrade pip build
+          python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-python
+          path: dist/*
+
+  release:
+    name: Publish GitHub Release
+    needs: [build-binaries, build-wheel]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name '*.zip' -o -name '*.whl' -o -name '*.tar.gz' \) -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.name }}
+          generate_release_notes: true
+          files: release/*
+          body: |
+            ## Downloads
+
+            **No Python required — just download, unzip, and run.**
+
+            | Platform | File |
+            |---|---|
+            | Windows 10/11 (x64) | `phi-anonymize-face-windows-x64.zip` |
+            | macOS (Apple Silicon, M1/M2/M3) | `phi-anonymize-face-macos-arm64.zip` |
+            | macOS (Intel) | `phi-anonymize-face-macos-x64.zip` |
+
+            Each archive contains:
+            - `phi-anonymize-gui/` (or `phi-anonymize-gui.app` on macOS) — the desktop GUI
+            - `phi-anonymize/` — the command-line tool
+            - `README.md`, `LICENSE`, `CHANGELOG.md`
+
+            **macOS first run:** binaries are unsigned. Right-click → Open the first time, or run `xattr -dr com.apple.quarantine phi-anonymize-gui.app` after unzipping.
+
+            **Windows first run:** SmartScreen may warn — click "More info" → "Run anyway".
+
+            ### Python users
+            ```
+            pip install phi-anonymize-face[gui]==${{ steps.tag.outputs.name }}
+            ```
+
+            See `CHANGELOG.md` in the archive for details.
