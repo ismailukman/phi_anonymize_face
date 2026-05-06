@@ -40,18 +40,26 @@ Grab the archive for your OS from the [latest release](https://github.com/ismail
 |---|---|
 | Windows 10/11 (x64) | `phi-anonymize-face-windows-x64.zip` |
 | macOS (Apple Silicon — M1/M2/M3/M4) | `phi-anonymize-face-macos-arm64.zip` |
-| macOS (Intel) | `phi-anonymize-face-macos-x64.zip` |
+| macOS (Intel) | use Option 2 or 3 below — Intel mac binaries aren't published |
 
-Unzip it. Inside you'll find:
-- **`phi-anonymize-gui`** (or `phi-anonymize-gui.app` on macOS) — double-click to launch the desktop app.
-- **`phi-anonymize`** — command-line tool (open a terminal in this folder and run `./phi-anonymize --help`).
+#### Windows — step by step
 
-**Windows first run:** SmartScreen may warn. Click **More info → Run anyway**.
+1. Download `phi-anonymize-face-windows-x64.zip` from the Releases page.
+2. Right-click the zip → **Extract All…** → pick a folder (e.g. `C:\Tools\phi-anonymize-face`).
+3. Open the extracted folder. You'll see two subfolders:
+   - `phi-anonymize-gui\` — desktop app
+   - `phi-anonymize\` — command-line tool
+4. **To run the GUI:** open `phi-anonymize-gui\` and double-click `phi-anonymize-gui.exe`. If SmartScreen warns, click **More info → Run anyway** (one time only).
+5. **To run the CLI:** open PowerShell in the `phi-anonymize\` folder and run `.\phi-anonymize.exe --help`. Or add that folder to your `PATH` so you can call `phi-anonymize` from anywhere.
 
-**macOS first run:** the bundle is unsigned. Either right-click the `.app` → **Open** the first time, or run once after unzipping:
-```bash
-xattr -dr com.apple.quarantine phi-anonymize-gui.app
-```
+#### macOS (Apple Silicon) — step by step
+
+1. Download `phi-anonymize-face-macos-arm64.zip` from the Releases page.
+2. Double-click the zip to extract it. Inside you'll find `phi-anonymize-gui.app` and a `phi-anonymize/` folder.
+3. The bundle is unsigned, so the first launch needs one of these:
+   - **Easy:** right-click `phi-anonymize-gui.app` → **Open** → confirm. macOS remembers this from then on.
+   - **Or in Terminal:** `xattr -dr com.apple.quarantine phi-anonymize-gui.app` then double-click as normal.
+4. **To run the CLI:** in Terminal, `cd` into the extracted folder and run `./phi-anonymize/phi-anonymize --help`. To install it system-wide: `sudo cp -R phi-anonymize /Applications/ && sudo ln -s /Applications/phi-anonymize/phi-anonymize /usr/local/bin/`.
 
 ### Option 2 — Install with pipx (isolated, one command)
 

@@ -26,9 +26,9 @@ jobs:
           - os: macos-latest
             label: macos-arm64
             archive_ext: zip
-          - os: macos-13
-            label: macos-x64
-            archive_ext: zip
+          # macos-13 (Intel) hosted runners are heavily oversubscribed and
+          # routinely time out at the 24h queue limit. Intel mac users can
+          # install via `pip install phi-anonymize-face[gui]` instead.
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -136,8 +136,8 @@ jobs:
             | Platform | File |
             |---|---|
             | Windows 10/11 (x64) | `phi-anonymize-face-windows-x64.zip` |
-            | macOS (Apple Silicon, M1/M2/M3) | `phi-anonymize-face-macos-arm64.zip` |
-            | macOS (Intel) | `phi-anonymize-face-macos-x64.zip` |
+            | macOS (Apple Silicon, M1/M2/M3/M4) | `phi-anonymize-face-macos-arm64.zip` |
+            | macOS (Intel) | Install via `pip install phi-anonymize-face[gui]` |
 
             Each archive contains:
             - `phi-anonymize-gui/` (or `phi-anonymize-gui.app` on macOS) — the desktop GUI
